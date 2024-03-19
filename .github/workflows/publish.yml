@@ -1,31 +1,31 @@
-name: Publish to Maven Central
-on:
-  push:
-    branches:
-      - develop
-#  pull_request: # uncommit for debug
-#      types: [ opened, synchronize, reopened ]
 jobs:
   publish:
     name: Publish
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          java-version: 11
-          distribution: temurin
-          cache: gradle
-      - name: Publish Package
-        env:
-          GITHUB_USERNAME: GITHUB_ACTOR
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-          MAVEN_USER_PASSWORD: ${{ secrets.MAVEN_USER_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-        run: ./gradlew --no-daemon --info --stacktrace publish publishToSonatype closeAndReleaseSonatypeStagingRepository
-        if: env.MAVEN_USERNAME != ''
+    - continue-on-error: true
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - continue-on-error: true
+      name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        cache: gradle
+        distribution: temurin
+        java-version: 11
+    - continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_USERNAME: GITHUB_ACTOR
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+        MAVEN_USER_PASSWORD: ${{ secrets.MAVEN_USER_PASSWORD }}
+      if: env.MAVEN_USERNAME != ''
+      name: Publish Package
+      run: ./gradlew --no-daemon --info --stacktrace publish publishToSonatype closeAndReleaseSonatypeStagingRepository
+name: Publish to Maven Central
+on:
+  repository_dispatch:
+    types: trigger-ga___publish.yml

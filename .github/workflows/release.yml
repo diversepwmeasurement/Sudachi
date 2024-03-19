@@ -1,47 +1,47 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
-name: Create release draft
-
-on:
-  push:
-    tags:
-      - 'v*'
-
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK 11
+    - continue-on-error: true
+      uses: actions/checkout@v3
+    - continue-on-error: true
+      name: Set up JDK 11
       uses: actions/setup-java@v3
       with:
-        java-version: 11
-        distribution: temurin
         cache: gradle
-    - name: Extract tag version
+        distribution: temurin
+        java-version: 11
+    - continue-on-error: true
       id: tag
+      name: Extract tag version
       run: echo "::set-output name=version::$(echo ${{ github.ref }} | sed -e 's/refs\/tags\/v//')"
-    - name: Build Distribution Archive
+    - continue-on-error: true
+      name: Build Distribution Archive
       run: ./gradlew --no-daemon --info --stacktrace assembleExecutableDist
-    - name: Create release
-      id: create_release
-      uses: actions/create-release@v1
+    - continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      id: create_release
+      name: Create release
+      uses: actions/create-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Sudachi version ${{ steps.tag.outputs.version }}
         draft: true
         prerelease: false
-    - name: Upload release asset
-      id: upload_release_asset
-      uses: actions/upload-release-asset@v1
+        release_name: Sudachi version ${{ steps.tag.outputs.version }}
+        tag_name: ${{ github.ref }}
+    - continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      id: upload_release_asset
+      name: Upload release asset
+      uses: actions/upload-release-asset@v1
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: build/distributions/sudachi-executable-${{ steps.tag.outputs.version }}.zip
-        asset_name: sudachi-${{ steps.tag.outputs.version }}-executable.zip
         asset_content_type: application/zip
+        asset_name: sudachi-${{ steps.tag.outputs.version }}-executable.zip
+        asset_path: build/distributions/sudachi-executable-${{ steps.tag.outputs.version
+          }}.zip
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+name: Create release draft
+on:
+  repository_dispatch:
+    types: trigger-ga___release.yml
